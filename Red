@@ -1,0 +1,135 @@
+import requests
+import json
+import discord
+from PIL import Image
+import time
+import random
+def retrieve_messages():
+	headers = {
+	'authorization' : "MjQ1NTQ3NjIyODYzOTk0ODgz.YPn64Q.Ts9Si4yVdD6MGUAbNTvf7JbF5kY"
+	}
+	r = requests.get("https://discord.com/api/v9/channels/747900247463690376/messages", headers=headers)
+
+	jsonn = json.loads(r.text)
+	return jsonn
+
+
+def post_messages(message):
+	headers = {
+	'authorization' : "MjQ1NTQ3NjIyODYzOTk0ODgz.YPn64Q.Ts9Si4yVdD6MGUAbNTvf7JbF5kY"
+	}
+	data = {
+			"content": "{}".format(message)
+	}
+	data["embeds"] =[
+	]
+
+	result = requests.post("https://discord.com/api/v9/channels/747900247463690376/messages", headers=headers, json= data)
+
+	try:
+		result.raise_for_status()
+	except requests.exceptions.HTTPError as err:
+		print(err)
+def get_cards(jsonn):
+
+	for value in jsonn:
+		#print(value, "\n")
+		if 'id' in value.keys() and 'attachments' in value.keys():
+			if len(value['attachments'])>0:
+				return value['attachments'][0]['url']
+
+def pick_a_card(current_card):
+	rarities = ["neither"]
+	src = Image.open(requests.get(current_card, stream=True).raw)
+	pixels = src.load()
+	#836x419
+	for x in range(836):
+		for y in range(419):
+			if pixels[x,y] == (144,156,158,255):
+				if y <= 134:
+					pixels[x,y] = (255,0,0,255)
+					newy = y - 50
+					newx = x + 9
+					if pixels[(x+9),(y-50)] == (250,235,196,255):
+
+						rarities.append("regular")
+						
+			elif pixels[x,y] == (26,32,36,255):
+				rarities.append("exoitc")
+	for x in range(len(rarities)):
+		if rarities[x] == 'exoitc':
+			return x
+	
+	return random.randint(1, 3)				
+	
+	#src.show()
+
+def pick_1(jsonn, current_id, headers):
+	requests.put(f'https://discord.com/api/v9/channels/747900247463690376/messages/{current_id}/reactions/1%EF%B8%8F%E2%83%A3/%40me', headers=headers)
+	print("Chose 1")
+def pick_2(jsonn,current_id, headers):
+	requests.put(f'https://discord.com/api/v9/channels/747900247463690376/messages/{current_id}/reactions/2%EF%B8%8F%E2%83%A3/%40me', headers=headers)
+	print("Chose 2")
+def pick_3(jsonn,current_id, headers):
+	requests.put(f'https://discord.com/api/v9/channels/747900247463690376/messages/{current_id}/reactions/3%EF%B8%8F%E2%83%A3/%40me', headers=headers)
+	print("Chose 3")
+
+
+def get_id():
+	headers = {
+	'authorization' : "MjQ1NTQ3NjIyODYzOTk0ODgz.YPn64Q.Ts9Si4yVdD6MGUAbNTvf7JbF5kY"
+	}
+	r = requests.get("https://discord.com/api/v9/channels/747900247463690376/messages", headers=headers)
+
+	jsonn = json.loads(r.text)
+	for value in jsonn:
+
+		if 'id' in value.keys() and 'attachments' in value.keys():
+			if len(value['attachments'])>0:
+				print(value['id'])
+				return value['id']
+
+
+def main():
+	count = 0
+	for x in range(10):
+		if count == 0:
+			count = count + 1
+		elif count >= 1:
+			random_offset = random.randint(10, 220)
+			time.sleep((60*31)+(random_offset))
+			count = count + 1
+		else:
+			time.sleep(60*30)
+
+		print(count)
+		headers = {
+		'authorization' : "MjQ1NTQ3NjIyODYzOTk0ODgz.YPn64Q.Ts9Si4yVdD6MGUAbNTvf7JbF5kY"
+		}
+		
+		post_messages("kd")
+
+		headers = {
+		'authorization' : "MjQ1NTQ3NjIyODYzOTk0ODgz.YPn64Q.Ts9Si4yVdD6MGUAbNTvf7JbF5kY"
+		}
+		
+		time.sleep(2)
+		current_id = get_id()
+		print("current_id", current_id)
+		time.sleep(2)
+		jsonn = retrieve_messages()
+		time.sleep(2)
+		current_card = get_cards(jsonn)
+		print("current_card",current_card)
+		time.sleep(1)
+		x = pick_a_card(current_card)
+		if x == 1:
+			pick_1(jsonn, current_id, headers)
+		elif x == 2:
+			pick_2(jsonn, current_id, headers)
+		elif x == 3:
+			pick_3(jsonn, current_id, headers)
+		else:
+			print("What the fuck?")
+			
+main()
